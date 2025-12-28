@@ -43,31 +43,42 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  flex-wrap: wrap;
-}
-
-.timeline-zoom-controls {
-  display: flex;
-  gap: 8px;
 }
 
 .timeline-nav-controls {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex: 1;
+  justify-content: center;
 }
 
 .timeline-range-label {
   font-weight: 600;
   color: var(--timeline-text);
-  min-width: 120px;
+  min-width: 140px;
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+.timeline-zoom-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.timeline-zoom-indicator {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--timeline-text-muted);
+  min-width: 60px;
+  text-align: center;
+  user-select: none;
 }
 
 /* Buttons */
 .timeline-btn {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border: 1px solid var(--timeline-border);
   background: #fff;
   color: var(--timeline-text);
@@ -77,25 +88,41 @@
   font-weight: 500;
   transition: all 0.2s ease;
   outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
 }
 
-.timeline-btn:hover {
+.timeline-btn:hover:not(:disabled) {
   background: var(--timeline-hover);
   border-color: var(--timeline-primary);
 }
 
-.timeline-btn:active {
+.timeline-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-.timeline-btn.active {
-  background: var(--timeline-primary);
-  color: #fff;
-  border-color: var(--timeline-primary);
+.timeline-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.timeline-btn.active:hover {
-  background: #357abd;
+.timeline-icon {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.zoom-btn {
+  padding: 6px 10px;
+  min-width: 32px;
+  font-size: 18px;
+}
+
+.zoom-btn .timeline-icon {
+  font-size: 18px;
+  font-weight: 600;
 }
 
 /* Viewport */
@@ -317,16 +344,26 @@
   .timeline-controls {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
   }
 
-  .timeline-zoom-controls,
   .timeline-nav-controls {
+    order: 1;
     width: 100%;
+  }
+
+  .timeline-zoom-controls {
+    order: 2;
     justify-content: center;
+    width: 100%;
   }
 
   .timeline-range-label {
-    order: -1;
+    min-width: 100px;
+  }
+
+  .timeline-zoom-indicator {
+    min-width: 50px;
   }
 
   .timeline-content {
@@ -346,8 +383,13 @@
   }
 
   .timeline-btn {
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: 13px;
+  }
+
+  .zoom-btn {
+    padding: 5px 8px;
+    min-width: 28px;
   }
 }
 
@@ -364,12 +406,14 @@
     font-size: 13px;
   }
 
-  .nav-btn {
-    padding: 6px 10px;
+  .timeline-range-label {
+    font-size: 13px;
+    min-width: 90px;
   }
 
-  .nav-btn span {
-    display: none;
+  .timeline-zoom-indicator {
+    font-size: 12px;
+    min-width: 45px;
   }
 }
 

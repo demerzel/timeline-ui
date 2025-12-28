@@ -30,6 +30,8 @@ class Timeline {
     this.zoomLevels = {
       months: {
         label: 'Months',
+        shortLabel: 'mo',
+        tooltip: 'Zoom in to see individual months',
         msPerUnit: 30 * 24 * 60 * 60 * 1000, // ~30 days
         formatLabel: (date) => date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
         getUnitStart: (date) => new Date(date.getFullYear(), date.getMonth(), 1),
@@ -38,6 +40,8 @@ class Timeline {
       },
       years: {
         label: 'Years',
+        shortLabel: 'y',
+        tooltip: 'Default view showing years',
         msPerUnit: 365.25 * 24 * 60 * 60 * 1000,
         formatLabel: (date) => date.getFullYear().toString(),
         getUnitStart: (date) => new Date(date.getFullYear(), 0, 1),
@@ -46,6 +50,8 @@ class Timeline {
       },
       decades: {
         label: 'Decades',
+        shortLabel: 'dec',
+        tooltip: 'Zoom out to see decades',
         msPerUnit: 10 * 365.25 * 24 * 60 * 60 * 1000,
         formatLabel: (date) => {
           const decade = Math.floor(date.getFullYear() / 10) * 10;
@@ -65,6 +71,9 @@ class Timeline {
         }
       }
     };
+
+    // Zoom level order for cycling
+    this.zoomOrder = ['months', 'years', 'decades'];
 
     // State
     this.items = [];
@@ -89,15 +98,23 @@ class Timeline {
     this.container.innerHTML = `
       <div class="timeline-header">
         <div class="timeline-controls">
-          <div class="timeline-zoom-controls">
-            <button class="timeline-btn zoom-btn" data-zoom="months">Months</button>
-            <button class="timeline-btn zoom-btn" data-zoom="years">Years</button>
-            <button class="timeline-btn zoom-btn" data-zoom="decades">Decades</button>
-          </div>
           <div class="timeline-nav-controls">
-            <button class="timeline-btn nav-btn" data-action="prev">← Previous</button>
+            <button class="timeline-btn nav-btn" data-action="prev" title="Previous time period">
+              <span class="timeline-icon">←</span>
+            </button>
             <span class="timeline-range-label"></span>
-            <button class="timeline-btn nav-btn" data-action="next">Next →</button>
+            <button class="timeline-btn nav-btn" data-action="next" title="Next time period">
+              <span class="timeline-icon">→</span>
+            </button>
+          </div>
+          <div class="timeline-zoom-controls">
+            <button class="timeline-btn zoom-btn zoom-out" data-action="zoom-out" title="Zoom out">
+              <span class="timeline-icon">−</span>
+            </button>
+            <span class="timeline-zoom-indicator"></span>
+            <button class="timeline-btn zoom-btn zoom-in" data-action="zoom-in" title="Zoom in">
+              <span class="timeline-icon">+</span>
+            </button>
           </div>
         </div>
       </div>
@@ -116,24 +133,29 @@ class Timeline {
     this.contentEl = this.container.querySelector('.timeline-content');
     this.rangeLabel = this.container.querySelector('.timeline-range-label');
     this.scrollbarThumb = this.container.querySelector('.timeline-scrollbar-thumb');
+    this.zoomIndicator = this.container.querySelector('.timeline-zoom-indicator');
 
-    // Highlight active zoom button
-    this.updateZoomButtons();
+    // Update zoom indicator
+    this.updateZoomIndicator();
   }
 
   attachEventListeners() {
     // Zoom controls
     this.container.querySelectorAll('.zoom-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const zoom = e.target.dataset.zoom;
-        this.setZoom(zoom);
+        const action = e.currentTarget.dataset.action;
+        if (action === 'zoom-in') {
+          this.zoomIn();
+        } else if (action === 'zoom-out') {
+          this.zoomOut();
+        }
       });
     });
 
     // Navigation controls
     this.container.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const action = e.target.dataset.action;
+        const action = e.currentTarget.dataset.action;
         if (action === 'prev') {
           this.scrollPrevious();
         } else if (action === 'next') {
@@ -248,7 +270,7 @@ class Timeline {
 
     this.currentZoom = level;
     this.currentOffset = 0; // Reset scroll position when changing zoom
-    this.updateZoomButtons();
+    this.updateZoomIndicator();
     this.updateViewportDates();
     this.render();
 
@@ -257,14 +279,62 @@ class Timeline {
     }
   }
 
-  updateZoomButtons() {
-    this.container.querySelectorAll('.zoom-btn').forEach(btn => {
-      if (btn.dataset.zoom === this.currentZoom) {
-        btn.classList.add('active');
+  /**
+   * Zoom in (to more detailed view)
+   */
+  zoomIn() {
+    const currentIndex = this.zoomOrder.indexOf(this.currentZoom);
+    if (currentIndex > 0) {
+      this.setZoom(this.zoomOrder[currentIndex - 1]);
+    }
+  }
+
+  /**
+   * Zoom out (to broader view)
+   */
+  zoomOut() {
+    const currentIndex = this.zoomOrder.indexOf(this.currentZoom);
+    if (currentIndex < this.zoomOrder.length - 1) {
+      this.setZoom(this.zoomOrder[currentIndex + 1]);
+    }
+  }
+
+  /**
+   * Update zoom indicator display
+   */
+  updateZoomIndicator() {
+    if (!this.zoomIndicator) return;
+
+    const zoom = this.zoomLevels[this.currentZoom];
+    const currentIndex = this.zoomOrder.indexOf(this.currentZoom);
+
+    // Update indicator text
+    this.zoomIndicator.textContent = zoom.label;
+    this.zoomIndicator.title = zoom.tooltip;
+
+    // Update button states
+    const zoomInBtn = this.container.querySelector('.zoom-in');
+    const zoomOutBtn = this.container.querySelector('.zoom-out');
+
+    if (zoomInBtn) {
+      zoomInBtn.disabled = currentIndex === 0;
+      if (currentIndex > 0) {
+        const nextZoom = this.zoomLevels[this.zoomOrder[currentIndex - 1]];
+        zoomInBtn.title = `Zoom in to ${nextZoom.label.toLowerCase()}`;
       } else {
-        btn.classList.remove('active');
+        zoomInBtn.title = 'Maximum zoom';
       }
-    });
+    }
+
+    if (zoomOutBtn) {
+      zoomOutBtn.disabled = currentIndex === this.zoomOrder.length - 1;
+      if (currentIndex < this.zoomOrder.length - 1) {
+        const nextZoom = this.zoomLevels[this.zoomOrder[currentIndex + 1]];
+        zoomOutBtn.title = `Zoom out to ${nextZoom.label.toLowerCase()}`;
+      } else {
+        zoomOutBtn.title = 'Minimum zoom';
+      }
+    }
   }
 
   /**
@@ -411,14 +481,45 @@ class Timeline {
     }
 
     const zoom = this.zoomLevels[this.currentZoom];
-    const startLabel = zoom.formatLabel(this.viewportStart);
-    const endLabel = zoom.formatLabel(this.viewportEnd);
+    let rangeText = '';
 
-    if (startLabel === endLabel) {
-      this.rangeLabel.textContent = startLabel;
-    } else {
-      this.rangeLabel.textContent = `${endLabel} - ${startLabel}`;
+    if (this.currentZoom === 'months') {
+      // Smart formatting for months
+      const startYear = this.viewportStart.getFullYear();
+      const endYear = this.viewportEnd.getFullYear();
+      const startMonth = this.viewportStart.toLocaleDateString('en-US', { month: 'short' });
+      const endMonth = this.viewportEnd.toLocaleDateString('en-US', { month: 'short' });
+
+      if (startYear === endYear) {
+        // Same year: "Jan - Jun 2024"
+        rangeText = `${endMonth} - ${startMonth} ${startYear}`;
+      } else {
+        // Different years: "Dec 2023 - Mar 2024"
+        rangeText = `${endMonth} ${endYear} - ${startMonth} ${startYear}`;
+      }
+    } else if (this.currentZoom === 'years') {
+      // Years: "2020 - 2024" or just "2024"
+      const startYear = this.viewportStart.getFullYear();
+      const endYear = this.viewportEnd.getFullYear();
+
+      if (startYear === endYear) {
+        rangeText = startYear.toString();
+      } else {
+        rangeText = `${endYear} - ${startYear}`;
+      }
+    } else if (this.currentZoom === 'decades') {
+      // Decades: "1990s - 2020s" or just "2020s"
+      const startLabel = zoom.formatLabel(this.viewportStart);
+      const endLabel = zoom.formatLabel(this.viewportEnd);
+
+      if (startLabel === endLabel) {
+        rangeText = startLabel;
+      } else {
+        rangeText = `${endLabel} - ${startLabel}`;
+      }
     }
+
+    this.rangeLabel.textContent = rangeText;
   }
 
   renderScrollbar() {
