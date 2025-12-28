@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timeline UI Component - Demo</title>
+  <link rel="stylesheet" href="../src/timeline.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .demo-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .demo-header h1 {
+      font-size: 32px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .demo-header p {
+      font-size: 16px;
+      color: #7f8c8d;
+    }
+
+    .demo-timeline {
+      height: 700px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-info {
+      margin-top: 30px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-info h2 {
+      font-size: 20px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+
+    .demo-info h3 {
+      font-size: 16px;
+      color: #2c3e50;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .demo-info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .demo-info li {
+      padding: 8px 0;
+      color: #555;
+      border-bottom: 1px solid #e0e4e8;
+    }
+
+    .demo-info li:last-child {
+      border-bottom: none;
+    }
+
+    .demo-info code {
+      background: #f5f7fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .demo-controls {
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-controls button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: 1px solid #4a90e2;
+      background: #4a90e2;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .demo-controls button:hover {
+      background: #357abd;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .demo-header h1 {
+        font-size: 24px;
+      }
+
+      .demo-timeline {
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="demo-header">
+      <h1>Timeline UI Component</h1>
+      <p>A vanilla JavaScript component for navigating time-based content</p>
+    </div>
+
+    <div id="timeline" class="demo-timeline"></div>
+
+    <div class="demo-controls">
+      <h3>Demo Actions:</h3>
+      <button onclick="addRandomItem()">Add Random Item</button>
+      <button onclick="timeline.setZoom('months')">Switch to Months</button>
+      <button onclick="timeline.setZoom('years')">Switch to Years</button>
+      <button onclick="timeline.setZoom('decades')">Switch to Decades</button>
+      <button onclick="scrollToRecent()">Jump to Most Recent</button>
+    </div>
+
+    <div class="demo-info">
+      <h2>Features</h2>
+      <ul>
+        <li><strong>Multiple Zoom Levels:</strong> Switch between months, years, and decades views</li>
+        <li><strong>Windowed Viewing:</strong> Shows a limited number of items at once for performance</li>
+        <li><strong>Smooth Scrolling:</strong> Navigate through time with mouse wheel, keyboard, or controls</li>
+        <li><strong>Responsive Design:</strong> Works on desktop and mobile devices</li>
+        <li><strong>Type Support:</strong> Different visual styles for events, photos, and posts</li>
+        <li><strong>Custom Scrollbar:</strong> Visual indicator of position in timeline</li>
+      </ul>
+
+      <h3>Keyboard Shortcuts</h3>
+      <ul>
+        <li><code>↑</code> / <code>↓</code> - Scroll up/down one item</li>
+        <li><code>←</code> / <code>→</code> - Navigate to previous/next time period</li>
+      </ul>
+
+      <h3>Usage</h3>
+      <ul>
+        <li>Use the zoom buttons to change the time granularity</li>
+        <li>Click Previous/Next to jump between time periods</li>
+        <li>Scroll with mouse wheel or drag the scrollbar</li>
+        <li>Click on any timeline item to interact with it</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="../src/timeline.js"></script>
+  <script>
+    // Sample data - generate timeline items spanning several decades
+    function generateSampleData() {
+      const items = [];
+      const types = ['event', 'photo', 'post'];
+      const eventTitles = [
+        'Company Founded',
+        'First Product Launch',
+        'Series A Funding',
+        'International Expansion',
+        'Major Partnership Announced',
+        'New Office Opening',
+        'Product Milestone Reached',
+        'Award Recognition',
+        'Team Retreat',
+        'Conference Presentation',
+        'Customer Success Story',
+        'Innovation Award',
+        'Sustainability Initiative',
+        'Community Outreach',
+        'Technology Breakthrough'
+      ];
+
+      const photoTitles = [
+        'Team Photo',
+        'Office Space',
+        'Product Demo',
+        'Conference Booth',
+        'Team Building Event',
+        'Celebration Party',
+        'Workshop Session',
+        'Customer Meeting',
+        'Industry Event',
+        'Behind the Scenes'
+      ];
+
+      const postTitles = [
+        'Quarterly Update',
+        'Industry Insights',
+        'Product Announcement',
+        'Customer Testimonial',
+        'Feature Highlight',
+        'Tech Stack Overview',
+        'Company Culture',
+        'Lessons Learned',
+        'Future Roadmap',
+        'Success Metrics'
+      ];
+
+      const contents = {
+        event: [
+          'A significant milestone in our journey.',
+          'This event marked a turning point in our growth.',
+          'An important moment that shaped our future.',
+          'Celebrating this achievement with the entire team.',
+          'A proud moment in our company history.'
+        ],
+        photo: [
+          'Captured memories from this special moment.',
+          'A snapshot of our team in action.',
+          'Visual story of our journey.',
+          'Moments that define who we are.',
+          'Preserving memories for future generations.'
+        ],
+        post: [
+          'Sharing insights and updates with our community.',
+          'Important information about our latest developments.',
+          'Thoughts and reflections on recent progress.',
+          'Updates on our ongoing initiatives.',
+          'Communicating our vision and values.'
+        ]
+      };
+
+      // Generate items from 1995 to 2024
+      const startYear = 1995;
+      const endYear = 2024;
+      let id = 1;
+
+      for (let year = startYear; year <= endYear; year++) {
+        // Generate 3-8 random items per year
+        const itemsPerYear = Math.floor(Math.random() * 6) + 3;
+
+        for (let i = 0; i < itemsPerYear; i++) {
+          const type = types[Math.floor(Math.random() * types.length)];
+          const month = Math.floor(Math.random() * 12);
+          const day = Math.floor(Math.random() * 28) + 1;
+          const date = new Date(year, month, day);
+
+          let title, titleList;
+          switch (type) {
+            case 'event':
+              titleList = eventTitles;
+              break;
+            case 'photo':
+              titleList = photoTitles;
+              break;
+            case 'post':
+              titleList = postTitles;
+              break;
+          }
+
+          title = titleList[Math.floor(Math.random() * titleList.length)];
+          const content = contents[type][Math.floor(Math.random() * contents[type].length)];
+
+          // Add images to photos
+          const image = type === 'photo'
+            ? `https://picsum.photos/seed/${id}/600/400`
+            : null;
+
+          items.push({
+            id: id++,
+            date: date,
+            type: type,
+            title: `${title} (${year})`,
+            content: content,
+            image: image
+          });
+        }
+      }
+
+      return items;
+    }
+
+    // Initialize timeline
+    const timeline = new Timeline('#timeline', {
+      zoomLevel: 'years',
+      windowSize: 8,
+      onItemClick: (item) => {
+        alert(`Clicked: ${item.title}\nDate: ${item.date.toLocaleDateString()}\nType: ${item.type}`);
+      },
+      onZoomChange: (level) => {
+        console.log('Zoom changed to:', level);
+      },
+      onScroll: (offset, startDate, endDate) => {
+        console.log('Scrolled to:', offset, startDate, endDate);
+      }
+    });
+
+    // Load sample data
+    const sampleData = generateSampleData();
+    timeline.setItems(sampleData);
+
+    // Demo functions
+    function addRandomItem() {
+      const types = ['event', 'photo', 'post'];
+      const type = types[Math.floor(Math.random() * types.length)];
+
+      const randomYear = 1995 + Math.floor(Math.random() * 30);
+      const randomMonth = Math.floor(Math.random() * 12);
+      const randomDay = Math.floor(Math.random() * 28) + 1;
+
+      const newItem = {
+        id: Date.now(),
+        date: new Date(randomYear, randomMonth, randomDay),
+        type: type,
+        title: `New ${type} (${randomYear})`,
+        content: 'This item was just added dynamically!',
+        image: type === 'photo' ? `https://picsum.photos/seed/${Date.now()}/600/400` : null
+      };
+
+      timeline.addItem(newItem);
+      alert(`Added new ${type} at ${newItem.date.toLocaleDateString()}`);
+    }
+
+    function scrollToRecent() {
+      timeline.currentOffset = 0;
+      timeline.updateViewportDates();
+      timeline.render();
+    }
+
+    // Log initialization
+    console.log('Timeline initialized with', sampleData.length, 'items');
+    console.log('Date range:',
+      new Date(Math.min(...sampleData.map(i => i.date))).getFullYear(),
+      '-',
+      new Date(Math.max(...sampleData.map(i => i.date))).getFullYear()
+    );
+  </script>
+</body>
+</html>

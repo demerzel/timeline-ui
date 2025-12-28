@@ -1,0 +1,27 @@
+{
+  "name": "timeline-ui",
+  "version": "1.0.0",
+  "description": "A vanilla JavaScript component for displaying and navigating time-based content with multiple zoom levels",
+  "main": "src/timeline.js",
+  "scripts": {
+    "demo": "open demo/index.html"
+  },
+  "keywords": [
+    "timeline",
+    "ui",
+    "component",
+    "vanilla-js",
+    "javascript",
+    "events",
+    "chronological",
+    "zoom",
+    "scroll"
+  ],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "src/",
+    "demo/",
+    "README.md"
+  ]
+}
