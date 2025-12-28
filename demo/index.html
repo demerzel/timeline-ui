@@ -174,154 +174,36 @@
   </div>
 
   <script src="../src/timeline.js"></script>
+  <script src="../demo-data.js"></script>
   <script>
-    // Sample data - generate timeline items spanning several decades
-    function generateSampleData() {
-      const items = [];
-      const types = ['event', 'photo', 'post'];
-      const eventTitles = [
-        'Company Founded',
-        'First Product Launch',
-        'Series A Funding',
-        'International Expansion',
-        'Major Partnership Announced',
-        'New Office Opening',
-        'Product Milestone Reached',
-        'Award Recognition',
-        'Team Retreat',
-        'Conference Presentation',
-        'Customer Success Story',
-        'Innovation Award',
-        'Sustainability Initiative',
-        'Community Outreach',
-        'Technology Breakthrough'
-      ];
-
-      const photoTitles = [
-        'Team Photo',
-        'Office Space',
-        'Product Demo',
-        'Conference Booth',
-        'Team Building Event',
-        'Celebration Party',
-        'Workshop Session',
-        'Customer Meeting',
-        'Industry Event',
-        'Behind the Scenes'
-      ];
-
-      const postTitles = [
-        'Quarterly Update',
-        'Industry Insights',
-        'Product Announcement',
-        'Customer Testimonial',
-        'Feature Highlight',
-        'Tech Stack Overview',
-        'Company Culture',
-        'Lessons Learned',
-        'Future Roadmap',
-        'Success Metrics'
-      ];
-
-      const contents = {
-        event: [
-          'A significant milestone in our journey.',
-          'This event marked a turning point in our growth.',
-          'An important moment that shaped our future.',
-          'Celebrating this achievement with the entire team.',
-          'A proud moment in our company history.'
-        ],
-        photo: [
-          'Captured memories from this special moment.',
-          'A snapshot of our team in action.',
-          'Visual story of our journey.',
-          'Moments that define who we are.',
-          'Preserving memories for future generations.'
-        ],
-        post: [
-          'Sharing insights and updates with our community.',
-          'Important information about our latest developments.',
-          'Thoughts and reflections on recent progress.',
-          'Updates on our ongoing initiatives.',
-          'Communicating our vision and values.'
-        ]
-      };
-
-      // Generate items from 1995 to 2024
-      const startYear = 1995;
-      const endYear = 2024;
-      let id = 1;
-
-      for (let year = startYear; year <= endYear; year++) {
-        // Generate 3-8 random items per year
-        const itemsPerYear = Math.floor(Math.random() * 6) + 3;
-
-        for (let i = 0; i < itemsPerYear; i++) {
-          const type = types[Math.floor(Math.random() * types.length)];
-          const month = Math.floor(Math.random() * 12);
-          const day = Math.floor(Math.random() * 28) + 1;
-          const date = new Date(year, month, day);
-
-          let title, titleList;
-          switch (type) {
-            case 'event':
-              titleList = eventTitles;
-              break;
-            case 'photo':
-              titleList = photoTitles;
-              break;
-            case 'post':
-              titleList = postTitles;
-              break;
-          }
-
-          title = titleList[Math.floor(Math.random() * titleList.length)];
-          const content = contents[type][Math.floor(Math.random() * contents[type].length)];
-
-          // Add images to photos
-          const image = type === 'photo'
-            ? `https://picsum.photos/seed/${id}/600/400`
-            : null;
-
-          items.push({
-            id: id++,
-            date: date,
-            type: type,
-            title: `${title} (${year})`,
-            content: content,
-            image: image
-          });
-        }
-      }
-
-      return items;
-    }
-
     // Initialize timeline
     const timeline = new Timeline('#timeline', {
       zoomLevel: 'years',
       windowSize: 8,
       onItemClick: (item) => {
-        alert(`Clicked: ${item.title}\nDate: ${item.date.toLocaleDateString()}\nType: ${item.type}`);
+        alert(`${item.title}\n\nDate: ${item.date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })}\n\nType: ${item.type}\n\n${item.content}`);
       },
       onZoomChange: (level) => {
         console.log('Zoom changed to:', level);
       },
       onScroll: (offset, startDate, endDate) => {
-        console.log('Scrolled to:', offset, startDate, endDate);
+        console.log('Viewing:', startDate?.toLocaleDateString(), '-', endDate?.toLocaleDateString());
       }
     });
 
-    // Load sample data
-    const sampleData = generateSampleData();
+    // Load rich demo data
+    const sampleData = generateRichDemoData();
     timeline.setItems(sampleData);
 
     // Demo functions
     function addRandomItem() {
       const types = ['event', 'photo', 'post'];
       const type = types[Math.floor(Math.random() * types.length)];
-
-      const randomYear = 1995 + Math.floor(Math.random() * 30);
+      const randomYear = 1990 + Math.floor(Math.random() * 36); // 1990-2025
       const randomMonth = Math.floor(Math.random() * 12);
       const randomDay = Math.floor(Math.random() * 28) + 1;
 
@@ -329,13 +211,13 @@
         id: Date.now(),
         date: new Date(randomYear, randomMonth, randomDay),
         type: type,
-        title: `New ${type} (${randomYear})`,
-        content: 'This item was just added dynamically!',
+        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+        content: 'This item was just added dynamically to demonstrate the addItem() method!',
         image: type === 'photo' ? `https://picsum.photos/seed/${Date.now()}/600/400` : null
       };
 
       timeline.addItem(newItem);
-      alert(`Added new ${type} at ${newItem.date.toLocaleDateString()}`);
+      alert(`Added new ${type} on ${newItem.date.toLocaleDateString()}`);
     }
 
     function scrollToRecent() {
@@ -344,13 +226,16 @@
       timeline.render();
     }
 
-    // Log initialization
+    // Log initialization with stats
+    const eventCount = sampleData.filter(i => i.type === 'event').length;
+    const photoCount = sampleData.filter(i => i.type === 'photo').length;
+    const postCount = sampleData.filter(i => i.type === 'post').length;
+    const minYear = new Date(Math.min(...sampleData.map(i => i.date))).getFullYear();
+    const maxYear = new Date(Math.max(...sampleData.map(i => i.date))).getFullYear();
+
     console.log('Timeline initialized with', sampleData.length, 'items');
-    console.log('Date range:',
-      new Date(Math.min(...sampleData.map(i => i.date))).getFullYear(),
-      '-',
-      new Date(Math.max(...sampleData.map(i => i.date))).getFullYear()
-    );
+    console.log('Date range:', minYear, '-', maxYear, `(${maxYear - minYear + 1} years)`);
+    console.log('Breakdown:', eventCount, 'events,', photoCount, 'photos,', postCount, 'posts');
   </script>
 </body>
 </html>

@@ -251,11 +251,11 @@
       <h3>Demo Actions</h3>
       <div class="button-group">
         <button onclick="addRandomItem()">Add Random Item</button>
-        <button onclick="timeline.setZoom('months')">Months View</button>
-        <button onclick="timeline.setZoom('years')">Years View</button>
-        <button onclick="timeline.setZoom('decades')">Decades View</button>
-        <button onclick="scrollToRecent()">Jump to Recent</button>
+        <button onclick="scrollToRecent()">Jump to Most Recent</button>
         <button onclick="scrollToOldest()">Jump to Oldest</button>
+        <button onclick="timeline.scrollToDate(new Date(2000, 0, 1))">Go to 2000s</button>
+        <button onclick="timeline.scrollToDate(new Date(2010, 0, 1))">Go to 2010s</button>
+        <button onclick="timeline.scrollToDate(new Date(2020, 0, 1))">Go to 2020s</button>
       </div>
     </div>
 
@@ -316,95 +316,8 @@
   </div>
 
   <script src="src/timeline.js"></script>
+  <script src="demo-data.js"></script>
   <script>
-    // Sample data generator - creates timeline items spanning multiple decades
-    function generateSampleData() {
-      const items = [];
-      const types = ['event', 'photo', 'post'];
-
-      const eventTitles = [
-        'Company Founded', 'Product Launch', 'Series A Funding', 'International Expansion',
-        'Major Partnership', 'New Office Opening', 'Product Milestone', 'Award Recognition',
-        'Team Retreat', 'Conference Presentation', 'Customer Success', 'Innovation Award',
-        'Sustainability Initiative', 'Community Outreach', 'Technology Breakthrough',
-        'Market Launch', 'Strategic Acquisition', 'IPO Announcement', 'Research Published'
-      ];
-
-      const photoTitles = [
-        'Team Photo', 'Office Space', 'Product Demo', 'Conference Booth',
-        'Team Building', 'Celebration Party', 'Workshop Session', 'Customer Meeting',
-        'Industry Event', 'Behind the Scenes', 'Product Showcase', 'Team Outing'
-      ];
-
-      const postTitles = [
-        'Quarterly Update', 'Industry Insights', 'Product Announcement', 'Customer Testimonial',
-        'Feature Highlight', 'Tech Stack Overview', 'Company Culture', 'Lessons Learned',
-        'Future Roadmap', 'Success Metrics', 'Best Practices', 'Case Study'
-      ];
-
-      const contents = {
-        event: [
-          'A significant milestone in our journey.',
-          'This event marked a turning point in our growth.',
-          'An important moment that shaped our future.',
-          'Celebrating this achievement with the entire team.',
-          'A proud moment in our company history.'
-        ],
-        photo: [
-          'Captured memories from this special moment.',
-          'A snapshot of our team in action.',
-          'Visual story of our journey.',
-          'Moments that define who we are.',
-          'Preserving memories for the future.'
-        ],
-        post: [
-          'Sharing insights and updates with our community.',
-          'Important information about our latest developments.',
-          'Thoughts and reflections on recent progress.',
-          'Updates on our ongoing initiatives.',
-          'Communicating our vision and values.'
-        ]
-      };
-
-      // Generate items from 1995 to 2024
-      const startYear = 1995;
-      const endYear = 2024;
-      let id = 1;
-
-      for (let year = startYear; year <= endYear; year++) {
-        const itemsPerYear = Math.floor(Math.random() * 6) + 3;
-
-        for (let i = 0; i < itemsPerYear; i++) {
-          const type = types[Math.floor(Math.random() * types.length)];
-          const month = Math.floor(Math.random() * 12);
-          const day = Math.floor(Math.random() * 28) + 1;
-          const date = new Date(year, month, day);
-
-          let titleList;
-          switch (type) {
-            case 'event': titleList = eventTitles; break;
-            case 'photo': titleList = photoTitles; break;
-            case 'post': titleList = postTitles; break;
-          }
-
-          const title = titleList[Math.floor(Math.random() * titleList.length)];
-          const content = contents[type][Math.floor(Math.random() * contents[type].length)];
-          const image = type === 'photo' ? `https://picsum.photos/seed/${id}/600/400` : null;
-
-          items.push({
-            id: id++,
-            date: date,
-            type: type,
-            title: `${title} (${year})`,
-            content: content,
-            image: image
-          });
-        }
-      }
-
-      return items;
-    }
-
     // Initialize timeline
     const timeline = new Timeline('#timeline', {
       zoomLevel: 'years',
@@ -424,15 +337,15 @@
       }
     });
 
-    // Load sample data
-    const sampleData = generateSampleData();
+    // Load rich demo data
+    const sampleData = generateRichDemoData();
     timeline.setItems(sampleData);
 
     // Demo functions
     function addRandomItem() {
       const types = ['event', 'photo', 'post'];
       const type = types[Math.floor(Math.random() * types.length)];
-      const randomYear = 1995 + Math.floor(Math.random() * 30);
+      const randomYear = 1990 + Math.floor(Math.random() * 36); // 1990-2025
       const randomMonth = Math.floor(Math.random() * 12);
       const randomDay = Math.floor(Math.random() * 28) + 1;
 
@@ -440,13 +353,13 @@
         id: Date.now(),
         date: new Date(randomYear, randomMonth, randomDay),
         type: type,
-        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)} (${randomYear})`,
+        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
         content: 'This item was just added dynamically to demonstrate the addItem() method!',
         image: type === 'photo' ? `https://picsum.photos/seed/${Date.now()}/600/400` : null
       };
 
       timeline.addItem(newItem);
-      alert(`Added new ${type} at ${newItem.date.toLocaleDateString()}`);
+      alert(`Added new ${type} on ${newItem.date.toLocaleDateString()}`);
     }
 
     function scrollToRecent() {
@@ -462,14 +375,18 @@
       timeline.render();
     }
 
-    // Log initialization
+    // Log initialization with stats
+    const eventCount = sampleData.filter(i => i.type === 'event').length;
+    const photoCount = sampleData.filter(i => i.type === 'photo').length;
+    const postCount = sampleData.filter(i => i.type === 'post').length;
+    const minYear = new Date(Math.min(...sampleData.map(i => i.date))).getFullYear();
+    const maxYear = new Date(Math.max(...sampleData.map(i => i.date))).getFullYear();
+
     console.log('🎉 Timeline initialized with', sampleData.length, 'items');
-    console.log('📅 Date range:',
-      new Date(Math.min(...sampleData.map(i => i.date))).getFullYear(),
-      '-',
-      new Date(Math.max(...sampleData.map(i => i.date))).getFullYear()
-    );
+    console.log('📅 Date range:', minYear, '-', maxYear, `(${maxYear - minYear + 1} years)`);
+    console.log('📊 Breakdown:', eventCount, 'events,', photoCount, 'photos,', postCount, 'posts');
     console.log('⌨️  Try keyboard shortcuts: ↑↓ to scroll, ←→ to navigate time periods');
+    console.log('🔍 Use +/- zoom controls to explore different time scales!');
   </script>
 </body>
 </html>
