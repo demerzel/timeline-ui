@@ -16,7 +16,9 @@ A lightweight, vanilla JavaScript component for displaying and navigating time-b
 
 ## Demo
 
-Open `demo/index.html` in your browser to see the timeline in action with sample data.
+**[Live Demo](https://demerzel.github.io/timeline-ui/)** - Try the interactive timeline now!
+
+Or open `demo/index.html` locally in your browser to see the timeline in action with sample data.
 
 ## Quick Start
 
