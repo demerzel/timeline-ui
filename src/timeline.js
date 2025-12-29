@@ -33,6 +33,8 @@ class Timeline {
         shortLabel: 'mo',
         tooltip: 'Zoom in to see individual months',
         msPerUnit: 30 * 24 * 60 * 60 * 1000, // ~30 days
+        viewDensity: 'detailed', // Show full item details
+        itemsPerView: 8,
         formatLabel: (date) => date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
         getUnitStart: (date) => new Date(date.getFullYear(), date.getMonth(), 1),
         getNextUnit: (date) => new Date(date.getFullYear(), date.getMonth() + 1, 1),
@@ -43,6 +45,8 @@ class Timeline {
         shortLabel: 'y',
         tooltip: 'Default view showing years',
         msPerUnit: 365.25 * 24 * 60 * 60 * 1000,
+        viewDensity: 'compact', // Show compact cards
+        itemsPerView: 16,
         formatLabel: (date) => date.getFullYear().toString(),
         getUnitStart: (date) => new Date(date.getFullYear(), 0, 1),
         getNextUnit: (date) => new Date(date.getFullYear() + 1, 0, 1),
@@ -53,6 +57,8 @@ class Timeline {
         shortLabel: 'dec',
         tooltip: 'Zoom out to see decades',
         msPerUnit: 10 * 365.25 * 24 * 60 * 60 * 1000,
+        viewDensity: 'minimal', // Show minimal dots/icons
+        itemsPerView: 30,
         formatLabel: (date) => {
           const decade = Math.floor(date.getFullYear() / 10) * 10;
           return `${decade}s`;
@@ -70,6 +76,14 @@ class Timeline {
           return new Date(decade - 10, 0, 1);
         }
       }
+    };
+
+    // Icon mapping for item types (pictorial representation)
+    this.itemIcons = {
+      event: '📅',
+      photo: '📷',
+      post: '📝',
+      default: '●'
     };
 
     // Zoom level order for cycling
@@ -341,7 +355,8 @@ class Timeline {
    * Scroll by a number of items
    */
   scroll(delta) {
-    const maxOffset = Math.max(0, this.sortedItems.length - this.options.windowSize);
+    const windowSize = this.zoomLevels[this.currentZoom].itemsPerView;
+    const maxOffset = Math.max(0, this.sortedItems.length - windowSize);
     this.currentOffset = Math.max(0, Math.min(maxOffset, this.currentOffset + delta));
     this.updateViewportDates();
     this.render();
@@ -381,7 +396,8 @@ class Timeline {
     const index = this.sortedItems.findIndex(item => item.date <= targetDate);
 
     if (index !== -1) {
-      const maxOffset = Math.max(0, this.sortedItems.length - this.options.windowSize);
+      const windowSize = this.zoomLevels[this.currentZoom].itemsPerView;
+      const maxOffset = Math.max(0, this.sortedItems.length - windowSize);
       this.currentOffset = Math.max(0, Math.min(maxOffset, index));
       this.updateViewportDates();
       this.render();
@@ -407,9 +423,10 @@ class Timeline {
    * Get items currently visible in the viewport
    */
   getVisibleItems() {
+    const windowSize = this.zoomLevels[this.currentZoom].itemsPerView;
     return this.sortedItems.slice(
       this.currentOffset,
-      this.currentOffset + this.options.windowSize
+      this.currentOffset + windowSize
     );
   }
 
@@ -440,9 +457,8 @@ class Timeline {
 
   createItemElement(item, index) {
     const zoom = this.zoomLevels[this.currentZoom];
+    const viewDensity = zoom.viewDensity;
     const itemEl = document.createElement('div');
-    itemEl.className = `timeline-item timeline-item-${item.type || 'default'}`;
-    itemEl.dataset.itemId = item.id;
 
     const dateStr = zoom.formatLabel(item.date);
     const fullDateStr = item.date.toLocaleDateString('en-US', {
@@ -451,18 +467,56 @@ class Timeline {
       day: 'numeric'
     });
 
-    itemEl.innerHTML = `
-      <div class="timeline-item-marker"></div>
-      <div class="timeline-item-content">
-        <div class="timeline-item-header">
-          <span class="timeline-item-date" title="${fullDateStr}">${dateStr}</span>
-          <span class="timeline-item-type">${item.type || 'event'}</span>
+    // Get icon for this item type
+    const icon = this.itemIcons[item.type] || this.itemIcons.default;
+
+    // Base classes
+    itemEl.className = `timeline-item timeline-item-${item.type || 'default'} timeline-item-${viewDensity}`;
+    itemEl.dataset.itemId = item.id;
+    itemEl.title = `${item.title} (${fullDateStr})`;
+
+    // Render based on view density
+    if (viewDensity === 'detailed') {
+      // Full detail view (months)
+      itemEl.innerHTML = `
+        <div class="timeline-item-marker"></div>
+        <div class="timeline-item-content">
+          <div class="timeline-item-header">
+            <span class="timeline-item-date" title="${fullDateStr}">${dateStr}</span>
+            <span class="timeline-item-type">${item.type || 'event'}</span>
+          </div>
+          <h3 class="timeline-item-title">${this.escapeHtml(item.title)}</h3>
+          ${item.image ? `<img class="timeline-item-image" src="${item.image}" alt="${this.escapeHtml(item.title)}" />` : ''}
+          ${item.content ? `<p class="timeline-item-text">${this.escapeHtml(item.content)}</p>` : ''}
         </div>
-        <h3 class="timeline-item-title">${this.escapeHtml(item.title)}</h3>
-        ${item.image ? `<img class="timeline-item-image" src="${item.image}" alt="${this.escapeHtml(item.title)}" />` : ''}
-        ${item.content ? `<p class="timeline-item-text">${this.escapeHtml(item.content)}</p>` : ''}
-      </div>
-    `;
+      `;
+    } else if (viewDensity === 'compact') {
+      // Compact view (years) - icon + title only
+      const thumbnailHtml = item.image
+        ? `<div class="timeline-item-thumbnail" style="background-image: url('${item.image}')"></div>`
+        : `<div class="timeline-item-icon">${icon}</div>`;
+
+      itemEl.innerHTML = `
+        <div class="timeline-item-marker"></div>
+        <div class="timeline-item-content">
+          ${thumbnailHtml}
+          <div class="timeline-item-info">
+            <div class="timeline-item-title">${this.escapeHtml(item.title)}</div>
+            <div class="timeline-item-date">${dateStr}</div>
+          </div>
+        </div>
+      `;
+    } else if (viewDensity === 'minimal') {
+      // Minimal view (decades) - just icon/dot
+      const visualHtml = item.image
+        ? `<div class="timeline-item-dot" style="background-image: url('${item.image}')"></div>`
+        : `<div class="timeline-item-dot">${icon}</div>`;
+
+      itemEl.innerHTML = `
+        ${visualHtml}
+        <div class="timeline-item-label">${this.escapeHtml(item.title)}</div>
+      `;
+    }
 
     // Click handler
     itemEl.addEventListener('click', () => {
@@ -523,7 +577,9 @@ class Timeline {
   }
 
   renderScrollbar() {
-    if (this.sortedItems.length <= this.options.windowSize) {
+    const windowSize = this.zoomLevels[this.currentZoom].itemsPerView;
+
+    if (this.sortedItems.length <= windowSize) {
       this.scrollbarThumb.style.display = 'none';
       return;
     }
@@ -531,7 +587,7 @@ class Timeline {
     this.scrollbarThumb.style.display = 'block';
 
     const totalItems = this.sortedItems.length;
-    const visibleItems = this.options.windowSize;
+    const visibleItems = windowSize;
     const thumbHeight = Math.max(20, (visibleItems / totalItems) * 100);
     const maxScroll = totalItems - visibleItems;
     const thumbPosition = (this.currentOffset / maxScroll) * (100 - thumbHeight);
